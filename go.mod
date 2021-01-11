@@ -1,4 +1,4 @@
-module github.com/monban/mailcheck
+module github.com/monban/gogmailcheck
 
 go 1.15
 
