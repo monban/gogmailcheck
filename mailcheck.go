@@ -20,7 +20,11 @@ func getClient(config *oauth2.Config) *http.Client {
 	// The file token.json stores the user's access and refresh tokens, and is
 	// created automatically when the authorization flow completes for the first
 	// time.
-	tokFile := "/home/flynn/bin/token.json"
+	data_dir, found := os.LookupEnv("XDG_DATA_HOME")
+	if !found {
+		data_dir = os.Getenv("HOME") + "/.local/share"
+	}
+	tokFile := data_dir + "/gogmailcheck/token.json"
 	tok, err := tokenFromFile(tokFile)
 	if err != nil {
 		tok = getTokenFromWeb(config)
@@ -101,7 +105,12 @@ func i3barOutput(unreadCount int64) string {
 }
 
 func main() {
-	b, err := ioutil.ReadFile("/home/flynn/bin/credentials.json")
+	conf_dir, found := os.LookupEnv("XDG_CONFIG_HOME")
+	if !found {
+		conf_dir = os.Getenv("HOME") + "/.config"
+	}
+	conf_dir += "/gogmailcheck"
+	b, err := ioutil.ReadFile(conf_dir + "/credentials.json")
 	if err != nil {
 		log.Fatalf("Unable to read client secret file: %v", err)
 	}
