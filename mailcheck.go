@@ -70,15 +70,31 @@ func saveToken(path string, token *oauth2.Token) {
 	json.NewEncoder(f).Encode(token)
 }
 
+func computeState(unreadCount int64) string {
+	switch {
+	case unreadCount == 0:
+		return "Idle"
+	case unreadCount < 5:
+		return "Good"
+	case unreadCount < 10:
+		return "Info"
+	case unreadCount < 50:
+		return "Warning"
+	default:
+		return "Critical"
+	}
+}
+
 func i3barOutput(unreadCount int64) string {
+	textStr := strconv.FormatInt(unreadCount, 10)
 	output := struct {
 		Icon  string `json:"icon"`
 		Text  string `json:"text"`
 		State string `json:"state"`
 	}{
 		Icon:  "mail",
-		Text:  strconv.FormatInt(unreadCount, 10),
-		State: "Idle",
+		Text:  textStr,
+		State: computeState(unreadCount),
 	}
 	jsonout, _ := json.Marshal(output)
 	return string(jsonout)
