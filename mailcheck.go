@@ -70,6 +70,20 @@ func saveToken(path string, token *oauth2.Token) {
         json.NewEncoder(f).Encode(token)
 }
 
+func i3barOutput(unreadCount int64) string {
+        output := struct {
+                Icon string `json:"icon"`
+                Text string `json:"text"`
+                State string `json:"state"`
+        }{
+                Icon: "mail",
+                Text: strconv.FormatInt(unreadCount, 10),
+                State: "Idle",
+        }
+        jsonout, _ := json.Marshal(output)
+        return string(jsonout)
+}
+
 func main() {
         b, err := ioutil.ReadFile("/home/flynn/bin/credentials.json")
         if err != nil {
@@ -93,15 +107,5 @@ func main() {
         if err != nil {
                 log.Fatalf("Unable to retrieve labels: %v", err)
         }
-        output := struct {
-                Icon string `json:"icon"`
-                Text string `json:"text"`
-                State string `json:"state"`
-        }{
-                Icon: "mail",
-                Text: strconv.FormatInt(r.MessagesUnread, 10),
-                State: "Idle",
-        }
-        jsonout, _ := json.Marshal(output)
-        fmt.Println(string(jsonout))
+        fmt.Println(i3barOutput(r.ThreadsUnread))
 }
