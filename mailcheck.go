@@ -89,19 +89,28 @@ func computeState(unreadCount int64) string {
 	}
 }
 
-func i3barOutput(unreadCount int64) string {
-	textStr := strconv.FormatInt(unreadCount, 10)
+func i3barOutput(icon string, message string, state string) string {
 	output := struct {
 		Icon  string `json:"icon"`
 		Text  string `json:"text"`
 		State string `json:"state"`
 	}{
-		Icon:  "mail",
-		Text:  textStr,
-		State: computeState(unreadCount),
+		Icon:  icon,
+		Text:  message,
+		State: state,
 	}
 	jsonout, _ := json.Marshal(output)
 	return string(jsonout)
+}
+
+func mailCountOutput(unreadCount int64) string {
+	textStr := strconv.FormatInt(unreadCount, 10)
+	state := computeState(unreadCount)
+	return i3barOutput("mail", textStr, state)
+}
+
+func errorOutput(err string) string {
+	return i3barOutput("notification", err, "Critical")
 }
 
 func main() {
@@ -112,25 +121,33 @@ func main() {
 	conf_dir += "/gogmailcheck"
 	b, err := ioutil.ReadFile(conf_dir + "/credentials.json")
 	if err != nil {
-		log.Fatalf("Unable to read client secret file: %v", err)
+		error := fmt.Sprintf("Unable to read client secret file: %v", err)
+		fmt.Println(errorOutput(error))
+		log.Fatalf(error)
 	}
 
 	// If modifying these scopes, delete your previously saved token.json.
 	config, err := google.ConfigFromJSON(b, gmail.GmailReadonlyScope)
 	if err != nil {
-		log.Fatalf("Unable to parse client secret file to config: %v", err)
+		error := fmt.Sprintf("Unable to parse client secret file to config: %v", err)
+		fmt.Println(errorOutput(error))
+		log.Fatalf(error)
 	}
 	client := getClient(config)
 
 	srv, err := gmail.New(client)
 	if err != nil {
-		log.Fatalf("Unable to retrieve Gmail client: %v", err)
+		error := fmt.Sprintf("Unable to retrieve Gmail client: %v", err)
+		fmt.Println(errorOutput(error))
+		log.Fatalf(error)
 	}
 
 	user := "me"
 	r, err := srv.Users.Labels.Get(user, "INBOX").Do()
 	if err != nil {
-		log.Fatalf("Unable to retrieve labels: %v", err)
+		error := fmt.Sprintf("Unable to retrieve labels: %v", err)
+		fmt.Println(errorOutput(error))
+		log.Fatalf(error)
 	}
-	fmt.Println(i3barOutput(r.ThreadsUnread))
+	fmt.Println(mailCountOutput(r.ThreadsUnread))
 }
